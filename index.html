@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educator vs Developer | Before & After Slider</title>
+    
+    <!-- Fallback web font similar to Google Sans if not locally installed -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent-color: #997516;
+            --bg-color: #f8f9fa;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Google Sans', 'DM Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Slider Container */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16 / 9; /* Maintains perfect proportions */
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Images */
+        .slider-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures images align and cover the area */
+            pointer-events: none;
+        }
+
+        /* The left image is clipped using clip-path */
+        .img-educator {
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+            z-index: 2;
+        }
+
+        .img-developer {
+            z-index: 1;
+        }
+
+        /* Labels */
+        .label {
+            position: absolute;
+            top: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            z-index: 3;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .label-left {
+            left: 20px;
+        }
+
+        .label-right {
+            right: 20px;
+        }
+
+        /* Interactive Handle */
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            background-color: var(--accent-color);
+            transform: translateX(-50%);
+            z-index: 10;
+            cursor: ew-resize;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .slider-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background-color: var(--accent-color);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .slider-handle:hover .slider-button,
+        .slider-handle:active .slider-button {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .slider-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #ffffff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .slider-container {
+                aspect-ratio: 4 / 3; /* Taller aspect ratio for mobile */
+            }
+            .label {
+                top: 10px;
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            .label-left { left: 10px; }
+            .label-right { right: 10px; }
+            .slider-button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slider-container" id="sliderContainer">
+        <!-- Right Image (Developer) - Background -->
+        <img 
+            src="https://ik.imagekit.io/ktmedutech/KTM%20EduTech%20Images/Before%20and%20after%20slider/Developer.png.png" 
+            alt="Developer" 
+            class="slider-img img-developer"
+        >
+        <div class="label label-right" id="labelRight">Developer</div>
+
+        <!-- Left Image (Educator) - Foreground (Clipped) -->
+        <img 
+            src="https://ik.imagekit.io/ktmedutech/KTM%20EduTech%20Images/Before%20and%20after%20slider/Educator.png.png" 
+            alt="Educator" 
+            class="slider-img img-educator" 
+            id="imgEducator"
+        >
+        <div class="label label-left" id="labelLeft">Educator</div>
+
+        <!-- Draggable Handle -->
+        <div class="slider-handle" id="sliderHandle">
+            <div class="slider-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sliderContainer = document.getElementById('sliderContainer');
+        const sliderHandle = document.getElementById('sliderHandle');
+        const imgEducator = document.getElementById('imgEducator');
+        const labelLeft = document.getElementById('labelLeft');
+        const labelRight = document.getElementById('labelRight');
+
+        let isDragging = false;
+
+        // Function to update the slider position
+        const updateSlider = (clientX) => {
+            const rect = sliderContainer.getBoundingClientRect();
+            // Calculate percentage based on mouse/touch position
+            let xPos = ((clientX - rect.left) / rect.width) * 100;
+
+            // Constrain between 0% and 100%
+            xPos = Math.max(0, Math.min(xPos, 100));
+
+            // Apply positions
+            sliderHandle.style.left = `${xPos}%`;
+            imgEducator.style.clipPath = `polygon(0 0, ${xPos}% 0, ${xPos}% 100%, 0 100%)`;
+
+            // Fade out labels if handle gets too close
+            labelLeft.style.opacity = xPos < 15 ? '0' : '1';
+            labelRight.style.opacity = xPos > 85 ? '0' : '1';
+        };
+
+        // Mouse Events
+        sliderContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateSlider(e.clientX);
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateSlider(e.clientX);
+            }
+        });
+
+        // Touch Events for Mobile Support
+        sliderContainer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateSlider(e.touches[0].clientX);
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                // Prevent default scrolling behavior while dragging horizontally
+                e.preventDefault(); 
+                updateSlider(e.touches[0].clientX);
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
